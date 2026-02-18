@@ -4,9 +4,9 @@
 #include "road.h"
 #include "test_helpers.h"
 
-/* -------------------------------------------------------------------------
+/* 
  * Helpers
- * ---------------------------------------------------------------------- */
+ */
 
 static Intersection make_empty_intersection(void) {
     Intersection inter;
@@ -30,31 +30,27 @@ static void add_vehicle(Intersection *inter, RoadDir start, RoadDir end,
     road_enqueue(&inter->roads[start], &v);
 }
 
-/* -------------------------------------------------------------------------
+/*
  * PHASE_INFO sanity checks
- * ---------------------------------------------------------------------- */
+ */
 
 static void test_phase_info_road_counts(void) {
     ASSERT_EQ(PHASE_INFO[PHASE_NS].road_count,      2);
     ASSERT_EQ(PHASE_INFO[PHASE_EW].road_count,      2);
-    ASSERT_EQ(PHASE_INFO[PHASE_N_ARROW].road_count, 1);
-    ASSERT_EQ(PHASE_INFO[PHASE_S_ARROW].road_count, 1);
-    ASSERT_EQ(PHASE_INFO[PHASE_E_ARROW].road_count, 1);
-    ASSERT_EQ(PHASE_INFO[PHASE_W_ARROW].road_count, 1);
+    ASSERT_EQ(PHASE_INFO[PHASE_NS_ARROW].road_count, 2);
+    ASSERT_EQ(PHASE_INFO[PHASE_EW_ARROW].road_count, 2);
 }
 
 static void test_phase_info_arrow_flag(void) {
     ASSERT(!PHASE_INFO[PHASE_NS].is_arrow);
     ASSERT(!PHASE_INFO[PHASE_EW].is_arrow);
-    ASSERT(PHASE_INFO[PHASE_N_ARROW].is_arrow);
-    ASSERT(PHASE_INFO[PHASE_S_ARROW].is_arrow);
-    ASSERT(PHASE_INFO[PHASE_E_ARROW].is_arrow);
-    ASSERT(PHASE_INFO[PHASE_W_ARROW].is_arrow);
+    ASSERT(PHASE_INFO[PHASE_NS_ARROW].is_arrow);
+    ASSERT(PHASE_INFO[PHASE_EW_ARROW].is_arrow);
 }
 
-/* -------------------------------------------------------------------------
+/*
  * controller_phase_score
- * ---------------------------------------------------------------------- */
+ */
 
 static void test_score_empty_intersection_is_zero(void) {
     Intersection inter = make_empty_intersection();
@@ -83,9 +79,9 @@ static void test_score_counts_left_only_for_arrow_phase(void) {
     /* Left-turn vehicle on North: visible to N_ARROW but not to PHASE_NS. */
     add_vehicle(&inter, ROAD_NORTH, ROAD_EAST, "v1"); /* left */
 
-    ASSERT(controller_phase_score(&inter, PHASE_N_ARROW) > 0);
+    ASSERT(controller_phase_score(&inter, PHASE_NS_ARROW) > 0);
     ASSERT_EQ(controller_phase_score(&inter, PHASE_NS), 0u);
-    ASSERT_EQ(controller_phase_score(&inter, PHASE_S_ARROW), 0u);
+    ASSERT_EQ(controller_phase_score(&inter, PHASE_EW_ARROW), 0u);
 }
 
 static void test_score_increases_with_wait_time(void) {
@@ -101,9 +97,9 @@ static void test_score_increases_with_wait_time(void) {
     ASSERT(score_at_5 > score_at_0);
 }
 
-/* -------------------------------------------------------------------------
+/*
  * controller_next_phase — phase selection
- * ---------------------------------------------------------------------- */
+ */
 
 static void test_selects_busiest_phase(void) {
     Intersection inter = make_empty_intersection();
@@ -124,7 +120,7 @@ static void test_selects_arrow_phase_when_only_left_turns(void) {
     add_vehicle(&inter, ROAD_SOUTH, ROAD_WEST, "s1"); /* left turn from south */
 
     PhaseDecision d = controller_next_phase(&inter);
-    ASSERT_EQ(d.phase, PHASE_S_ARROW);
+    ASSERT_EQ(d.phase, PHASE_NS_ARROW);
 }
 
 static void test_tie_keeps_current_phase(void) {
@@ -145,9 +141,9 @@ static void test_empty_intersection_returns_min_duration(void) {
     ASSERT_EQ(d.duration, MIN_GREEN_STEPS);
 }
 
-/* -------------------------------------------------------------------------
+/*
  * controller_next_phase — duration calculation
- * ---------------------------------------------------------------------- */
+ */
 
 static void test_duration_clamped_to_min(void) {
     Intersection inter = make_empty_intersection();
@@ -189,9 +185,9 @@ static void test_duration_clamped_to_max(void) {
     ASSERT_EQ(d.duration, MAX_GREEN_STEPS);
 }
 
-/* -------------------------------------------------------------------------
+/*
  * Starvation prevention: wait time shifts selection
- * ---------------------------------------------------------------------- */
+ */
 
 static void test_starvation_prevention(void) {
     Intersection inter = make_empty_intersection();
@@ -212,9 +208,9 @@ static void test_starvation_prevention(void) {
     ASSERT_EQ(d.phase, PHASE_EW);
 }
 
-/* -------------------------------------------------------------------------
+/*
  * Entry point
- * ---------------------------------------------------------------------- */
+ */
 
 int main(void) {
     RUN_TEST(test_phase_info_road_counts);

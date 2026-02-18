@@ -23,7 +23,7 @@
 #define ROAD_COUNT              4
 
 /* Number of distinct traffic-light phases. */
-#define PHASE_COUNT             6
+#define PHASE_COUNT             4
 
 /* Maximum number of roads active (green) within a single phase. */
 #define MAX_ROADS_PER_PHASE     2

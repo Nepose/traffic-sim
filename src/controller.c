@@ -5,10 +5,8 @@
 const PhaseInfo PHASE_INFO[PHASE_COUNT] = {
     [PHASE_NS]      = { {ROAD_NORTH, ROAD_SOUTH}, 2, false },
     [PHASE_EW]      = { {ROAD_EAST,  ROAD_WEST},  2, false },
-    [PHASE_N_ARROW] = { {ROAD_NORTH, ROAD_NONE},  1, true  },
-    [PHASE_S_ARROW] = { {ROAD_SOUTH, ROAD_NONE},  1, true  },
-    [PHASE_E_ARROW] = { {ROAD_EAST,  ROAD_NONE},  1, true  },
-    [PHASE_W_ARROW] = { {ROAD_WEST,  ROAD_NONE},  1, true  },
+    [PHASE_NS_ARROW] = { {ROAD_NORTH, ROAD_SOUTH},  2, true  },
+    [PHASE_EW_ARROW] = { {ROAD_EAST, ROAD_WEST},  2, true  },
 };
 
 

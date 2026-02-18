@@ -95,10 +95,8 @@ typedef struct {
 typedef enum {
     PHASE_NS      = 0,   /* North + South: straight & right lanes */
     PHASE_EW      = 1,   /* East  + West:  straight & right lanes */
-    PHASE_N_ARROW = 2,   /* North only: left-turn lane             */
-    PHASE_S_ARROW = 3,   /* South only: left-turn lane             */
-    PHASE_E_ARROW = 4,   /* East  only: left-turn lane             */
-    PHASE_W_ARROW = 5    /* West  only: left-turn lane             */
+    PHASE_NS_ARROW = 2,   /* North + South: left-turn lane */
+    PHASE_EW_ARROW = 3,   /* East + West: left-turn lane */
 } Phase;
 
 /*
