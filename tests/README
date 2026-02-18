@@ -8,3 +8,9 @@ Test traffic light
 gcc -std=c11 -Wall -Wextra -Wpedantic -Iinclude -Itests src/traffic_light.c \
       tests/test_traffic_light.c -o build/test_traffic_light && \
       ./build/test_traffic_light
+
+Test controller
+
+gcc -std=c11 -Wall -Wextra -Wpedantic -Iinclude -Itests src/road.c \
+      src/controller.c tests/test_controller.c -o build/test_controller && \
+      ./build/test_controller
