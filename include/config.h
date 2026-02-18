@@ -40,4 +40,8 @@
 /* Number of steps a light stays yellow before turning red. */
 #define YELLOW_STEPS            1
 
+/* Maximum vehicles that can depart in a single step.
+   Main phase: MAX_ROADS_PER_PHASE roads x 2 active lanes (straight + right). */
+#define MAX_DEPARTURES_PER_STEP (MAX_ROADS_PER_PHASE * 2)
+
 #endif /* CONFIG_H */

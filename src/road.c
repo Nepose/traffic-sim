@@ -1,9 +1,9 @@
 #include "road.h"
 #include <string.h>
 
-/* -------------------------------------------------------------------------
+/*
  * Movement / lane derivation
- * ---------------------------------------------------------------------- */
+ */
 
 MovementType movement_type(RoadDir start, RoadDir end) {
     if (start >= ROAD_NONE || end >= ROAD_NONE || start == end) {
@@ -34,9 +34,9 @@ Lane lane_for_movement(MovementType movement) {
     }
 }
 
-/* -------------------------------------------------------------------------
+/*
  * VehicleQueue operations
- * ---------------------------------------------------------------------- */
+ */
 
 void queue_init(VehicleQueue *q) {
     q->head  = 0;
@@ -82,9 +82,9 @@ bool queue_peek(const VehicleQueue *q, Vehicle *out) {
     return true;
 }
 
-/* -------------------------------------------------------------------------
+/*
  * Road operations
- * ---------------------------------------------------------------------- */
+ */ 
 
 void road_init(Road *r) {
     for (int i = 0; i < LANES_PER_ROAD; i++) {
@@ -93,19 +93,31 @@ void road_init(Road *r) {
 }
 
 bool road_enqueue(Road *r, const Vehicle *v) {
+    if (v->movement == MOVE_INVALID) {
+        return false;
+    }
     Lane lane = lane_for_movement(v->movement);
     return queue_enqueue(&r->lanes[lane], v);
 }
 
 bool road_dequeue_lane(Road *r, Lane lane, Vehicle *out) {
+    if (lane >= LANES_PER_ROAD) {
+        return false;
+    }
     return queue_dequeue(&r->lanes[lane], out);
 }
 
 bool road_peek_lane(const Road *r, Lane lane, Vehicle *out) {
+    if (lane >= LANES_PER_ROAD) {
+        return false;
+    }
     return queue_peek(&r->lanes[lane], out);
 }
 
 uint8_t road_lane_count(const Road *r, Lane lane) {
+    if (lane >= LANES_PER_ROAD) {
+        return 0;
+    }
     return r->lanes[lane].count;
 }
 

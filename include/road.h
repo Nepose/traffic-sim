@@ -13,9 +13,9 @@
 
 #include "types.h"
 
-/* -------------------------------------------------------------------------
+/*
  * Movement / lane derivation
- * ---------------------------------------------------------------------- */
+ */
 
 /*
  * Derive the movement type from start and end road.
@@ -34,9 +34,9 @@ MovementType movement_type(RoadDir start, RoadDir end);
 /* Map a MovementType to the lane index it belongs to. */
 Lane lane_for_movement(MovementType movement);
 
-/* -------------------------------------------------------------------------
- * VehicleQueue operations (single lane)
- * ---------------------------------------------------------------------- */
+/*
+ * "thread" for single-lane operations.
+ */
 
 /* Zero-initialise a queue. Must be called before first use. */
 void queue_init(VehicleQueue *q);
@@ -66,9 +66,9 @@ bool queue_dequeue(VehicleQueue *q, Vehicle *out);
  */
 bool queue_peek(const VehicleQueue *q, Vehicle *out);
 
-/* -------------------------------------------------------------------------
+/*
  * Road operations (all three lanes)
- * ---------------------------------------------------------------------- */
+ */
 
 /* Zero-initialise all three lane queues. */
 void road_init(Road *r);

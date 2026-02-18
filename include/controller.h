@@ -35,12 +35,12 @@
 
 #include "types.h"
 
-/* -------------------------------------------------------------------------
+/*
  * Phase metadata
  *
  * Exposed publicly so the simulation can apply the phase decision
  * (activate the correct lights) without duplicating this table.
- * ---------------------------------------------------------------------- */
+ */
 
 typedef struct {
     RoadDir roads[MAX_ROADS_PER_PHASE];
@@ -51,9 +51,9 @@ typedef struct {
 
 extern const PhaseInfo PHASE_INFO[PHASE_COUNT];
 
-/* -------------------------------------------------------------------------
+/*
  * Controller API
- * ---------------------------------------------------------------------- */
+ */
 
 typedef struct {
     Phase   phase;
@@ -62,7 +62,7 @@ typedef struct {
 
 /*
  * Select the next phase and calculate its duration.
- * Pure function — reads intersection state, returns a decision, no side effects.
+ * Reads intersection state, returns a decision.
  */
 PhaseDecision controller_next_phase(const Intersection *inter);
 

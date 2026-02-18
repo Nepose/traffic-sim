@@ -57,6 +57,9 @@ static uint8_t phase_vehicle_count(const Intersection *inter, Phase phase) {
 
 /* Let's name that as API */
 uint32_t controller_phase_score(const Intersection *inter, Phase phase) {
+    if (phase >= PHASE_COUNT) {
+        return 0;
+    }
     const PhaseInfo *info = &PHASE_INFO[phase];
     uint32_t score = 0;
 
