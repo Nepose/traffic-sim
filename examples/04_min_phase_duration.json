@@ -1,0 +1,14 @@
+{
+  "_comment": [
+    "Only one vehicle: queue depth = 1 < MIN_GREEN_STEPS (2).",
+    "The controller clamps duration to MIN_GREEN_STEPS, so the light",
+    "stays green for 2 steps even though the queue is empty after step 1.",
+    "Step 1: v1 departs.",
+    "Step 2: light still green (min duration not yet exhausted), nothing departs."
+  ],
+  "commands": [
+    { "type": "addVehicle", "vehicleId": "v1", "startRoad": "north", "endRoad": "south" },
+    { "type": "step" },
+    { "type": "step" }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "_comment": [
+    "One vehicle per lane per road — 12 vehicles total.",
+    "All four phases activate in sequence:",
+    "",
+    "  Steps  1-4:  PHASE_NS      (straight + right on N+S, duration=4)",
+    "  Steps  5-8:  PHASE_EW      (straight + right on E+W, duration=4)",
+    "  Steps  9-10: PHASE_NS_ARROW (left turns on N+S, duration=2)",
+    "  Steps 11-12: PHASE_EW_ARROW (left turns on E+W, duration=2)",
+    "",
+    "NS and EW start with equal score (4 each); NS wins the initial tie",
+    "because it is the default phase. Left-turn phases score half as much",
+    "at t=0 (2 vehicles vs 4), so they wait until the main phases clear.",
+    "Once both main phases are empty the two arrow phases tie at 18; the",
+    "loop visits PHASE_NS_ARROW first, so it wins by iteration order."
+  ],
+  "commands": [
+    { "type": "addVehicle", "vehicleId": "north_straight", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "north_right",    "startRoad": "north", "endRoad": "west"  },
+    { "type": "addVehicle", "vehicleId": "north_left",     "startRoad": "north", "endRoad": "east"  },
+    { "type": "addVehicle", "vehicleId": "south_straight", "startRoad": "south", "endRoad": "north" },
+    { "type": "addVehicle", "vehicleId": "south_right",    "startRoad": "south", "endRoad": "east"  },
+    { "type": "addVehicle", "vehicleId": "south_left",     "startRoad": "south", "endRoad": "west"  },
+    { "type": "addVehicle", "vehicleId": "east_straight",  "startRoad": "east",  "endRoad": "west"  },
+    { "type": "addVehicle", "vehicleId": "east_right",     "startRoad": "east",  "endRoad": "north" },
+    { "type": "addVehicle", "vehicleId": "east_left",      "startRoad": "east",  "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "west_straight",  "startRoad": "west",  "endRoad": "east"  },
+    { "type": "addVehicle", "vehicleId": "west_right",     "startRoad": "west",  "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "west_left",      "startRoad": "west",  "endRoad": "north" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" }
+  ]
+}

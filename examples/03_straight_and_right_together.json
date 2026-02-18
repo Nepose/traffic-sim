@@ -1,0 +1,13 @@
+{
+  "_comment": [
+    "North->South is straight (LANE_STRAIGHT).",
+    "North->West is a right turn (LANE_RIGHT).",
+    "Both lanes are active during PHASE_NS, so both vehicles",
+    "depart from the North road in the same step."
+  ],
+  "commands": [
+    { "type": "addVehicle", "vehicleId": "north_straight", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "north_right",    "startRoad": "north", "endRoad": "west"  },
+    { "type": "step" }
+  ]
+}

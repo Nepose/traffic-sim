@@ -1,0 +1,12 @@
+{
+  "_comment": [
+    "North->East and South->West are both left turns.",
+    "PHASE_NS_ARROW serves both roads simultaneously,",
+    "so both vehicles depart in the same step."
+  ],
+  "commands": [
+    { "type": "addVehicle", "vehicleId": "north_left", "startRoad": "north", "endRoad": "east" },
+    { "type": "addVehicle", "vehicleId": "south_left", "startRoad": "south", "endRoad": "west" },
+    { "type": "step" }
+  ]
+}

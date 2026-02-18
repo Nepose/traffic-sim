@@ -19,10 +19,9 @@ set(CORE_SOURCES
 add_library(traffic_sim_core STATIC ${CORE_SOURCES})
 target_include_directories(traffic_sim_core PUBLIC include)
 
-# Main executable (when main.c is implemented)
-#
-# add_executable(traffic_sim src/main.c)
-# target_link_libraries(traffic_sim PRIVATE traffic_sim_core)
+# Main executable
+add_executable(traffic_sim src/main.c)
+target_link_libraries(traffic_sim PRIVATE traffic_sim_core)
 
 # Tests
 enable_testing()

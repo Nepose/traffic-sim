@@ -14,9 +14,6 @@ make clean  # remove build artefacts
 
 ## Usage
 
-> `main.c` and the Python JSON bridge are not yet implemented (in progress).
-> The command below shows the intended interface.
-
 ```bash
 python3 bridge/bridge.py input.json output.json
 ```
@@ -44,6 +41,8 @@ python3 bridge/bridge.py input.json output.json
 
 U-turns (`startRoad == endRoad`) are rejected as invalid input.
 
+See `QUICKSTART.md` for a full walkthrough and the `examples/` directory for ready-made scenarios ranging from 4 to 1 650 vehicles.
+
 ---
 
 ## Architecture
@@ -55,37 +54,29 @@ traffic_sim/
 │   ├── types.h           # all shared enums and structs, no logic
 │   ├── road.h            # ring-buffer queue + movement derivation
 │   ├── traffic_light.h   # per-road FSM
+│   ├── intersection.h    # simulation loop (step, add vehicle, query)
 │   └── controller.h      # adaptive phase scheduling algorithm
 ├── src/
 │   ├── road.c
 │   ├── traffic_light.c
 │   ├── controller.c
-│   ├── intersection.c    # (in progress)
-│   ├── simulation.c      # (in progress)
-│   ├── hal_desktop.c     # (in progress) — HAL impl for desktop
-│   └── main.c            # (in progress)
+│   ├── intersection.c
+│   └── main.c            # stdin line-protocol entry point
 ├── bridge/
-│   └── bridge.py         # (in progress) — JSON ↔ line-protocol adapter
-└── tests/
-    ├── test_helpers.h    # minimal zero-dependency test harness
-    ├── test_road.c
-    ├── test_traffic_light.c
-    └── test_controller.c
+│   └── bridge.py         # JSON ↔ line-protocol adapter
+├── examples/
+│   ├── 01_spec_example.json … 09_left_turn_siege.json
+│   └── gen_examples.py   # generator for large scenarios
+├── tests/
+│   ├── test_helpers.h    # minimal zero-dependency test harness
+│   ├── test_road.c
+│   ├── test_traffic_light.c
+│   ├── test_controller.c
+│   └── test_intersection.c
+├── QUICKSTART.md
+├── Makefile
+└── CMakeLists.txt
 ```
-
-### HAL layer
-
-`hal.h` (in progress) will define a small interface for output and time:
-
-```c
-typedef struct {
-    void     (*output_vehicles)(const char **ids, uint8_t count);
-    uint32_t (*get_tick)(void);
-} HAL;
-```
-
-On desktop: writes to stdout, uses the system clock.
-On embedded: swap in a UART write and `HAL_GetTick()` — no other changes needed.
 
 ---
 
@@ -139,6 +130,8 @@ set_green(N)         set_green_arrow(N)               │
 
 `tick()` is called **after** the vehicle check each step, so a light set to `GREEN` with duration `N` allows exactly `N` vehicles through before transitioning. `tick()` on a `RED` light is a no-op, safe to call unconditionally on all four roads every step.
 
+YELLOW is a **display state only**. It appears on the light at the end of the last green step (after `tick()`) but does not consume a simulation step of its own — the new phase is applied at the very start of the following step, overriding YELLOW before any vehicle check occurs.
+
 ---
 
 ## Adaptive scheduling algorithm
@@ -151,10 +144,10 @@ The controller is a pure function of the intersection state: it reads queue leng
 |-------|-------------|-------------|
 | `PHASE_NS` | North + South | STRAIGHT, RIGHT |
 | `PHASE_EW` | East + West | STRAIGHT, RIGHT |
-| `PHASE_N_ARROW` | North | LEFT |
-| `PHASE_S_ARROW` | South | LEFT |
-| `PHASE_E_ARROW` | East | LEFT |
-| `PHASE_W_ARROW` | West | LEFT |
+| `PHASE_NS_ARROW` | North + South | LEFT |
+| `PHASE_EW_ARROW` | East + West | LEFT |
+
+Opposing left turns (e.g. North and South) do not conflict in right-hand traffic — they pass through the far side of the centre box, so each arrow phase serves both roads simultaneously.
 
 ### Priority score
 
@@ -176,8 +169,7 @@ The phase with the highest score is selected. Ties are broken in favour of the c
 duration = clamp(total_vehicles_in_active_lanes, MIN_GREEN_STEPS, MAX_GREEN_STEPS)
 ```
 
-Roughly one step per waiting vehicle, bounded to avoid micro-oscillation
-(too short) and monopolisation (too long). Both limits are set in `config.h`.
+Roughly one step per waiting vehicle, bounded to avoid micro-oscillation (too short) and monopolisation (too long). Both limits are set in `config.h`.
 
 ---
 
@@ -185,13 +177,11 @@ Roughly one step per waiting vehicle, bounded to avoid micro-oscillation
 
 On each `step` command:
 
-1. For every road currently on **GREEN** or **GREEN_ARROW**: dequeue the front
-   vehicle from each active lane → add to `leftVehicles`
-2. Tick all four traffic lights (RED lights are a no-op)
-3. If `phase_steps_remaining` reaches 0 → controller selects next phase;
-   lights transition through YELLOW before the new phase goes GREEN
+1. If `phase_steps_remaining == 0`: the controller selects the next phase and activates it immediately (lights set to GREEN / GREEN_ARROW).
+2. For every road currently on **GREEN** or **GREEN_ARROW**: dequeue the front vehicle from each active lane → add to `leftVehicles`.
+3. Tick all four traffic lights (RED lights are a no-op).
+4. Decrement `phase_steps_remaining`; increment `step_count`.
 
-A step where the active light is YELLOW produces `leftVehicles: []` for that
-road — yellow steps count as simulation steps in the output.
+`addVehicle` commands that appear between two `step` commands take effect before the controller runs at the start of the next step, so they influence the phase decision.
 
 ---

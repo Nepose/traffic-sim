@@ -1,0 +1,33 @@
+{
+  "_comment": [
+    "Demonstrates the wait-time multiplier preventing starvation.",
+    "",
+    "All vehicles are added at step 0:",
+    "  - ew_waiting: 1 EW vehicle",
+    "  - ns_a/b/c:   3 NS vehicles",
+    "",
+    "Steps 1-3: NS wins initially (score 3 vs 1), ns_a/b/c depart.",
+    "",
+    "After step 3, two fresh NS vehicles are added (enqueue_step = 3).",
+    "  - score(NS) = 2 * (1 + 0) = 2   (2 vehicles, 0 steps waited)",
+    "  - score(EW) = 1 * (1 + 3) = 4   (1 vehicle, 3 steps waited)",
+    "",
+    "Step 4: EW wins despite having FEWER vehicles, because ew_waiting's",
+    "        accumulated wait time pushes its score above the fresh NS load.",
+    "Steps 5-6: NS phase serves the two fresh vehicles."
+  ],
+  "commands": [
+    { "type": "addVehicle", "vehicleId": "ew_waiting", "startRoad": "east",  "endRoad": "west"  },
+    { "type": "addVehicle", "vehicleId": "ns_a",       "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "ns_b",       "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "ns_c",       "startRoad": "north", "endRoad": "south" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "addVehicle", "vehicleId": "ns_fresh1", "startRoad": "north", "endRoad": "south" },
+    { "type": "addVehicle", "vehicleId": "ns_fresh2", "startRoad": "south", "endRoad": "north" },
+    { "type": "step" },
+    { "type": "step" },
+    { "type": "step" }
+  ]
+}
