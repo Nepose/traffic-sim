@@ -43,15 +43,10 @@ result to `output.json`.
 }
 ```
 
-- **`addVehicle`** — adds one vehicle to the queue.  `startRoad` and `endRoad`
-  are one of `north`, `south`, `east`, `west`.  U-turns (`start == end`) are
-  silently rejected.
-- **`step`** — advances the simulation by one tick.  The controller picks the
-  best phase, active lanes dequeue one vehicle each, and the lights tick.
-  Produces exactly one entry in `stepStatuses`.
+- **`addVehicle`** — adds one vehicle to the queue.  `startRoad` and `endRoad` are one of `north`, `south`, `east`, `west`.  U-turns (`start == end`) are silently rejected.
+- **`step`** — advances the simulation by one tick.  The controller picks the best phase, active lanes dequeue one vehicle each, and the lights tick. Produces exactly one entry in `stepStatuses`.
 
-Commands can be freely interleaved — `addVehicle` calls between two `step`
-commands are visible to the controller that runs at the start of the next step.
+Commands can be freely interleaved, that's, `addVehicle` calls between two `step` commands are visible to the controller that runs at the start of the next step.
 
 ## Output format
 
@@ -64,8 +59,7 @@ commands are visible to the controller that runs at the start of the next step.
 }
 ```
 
-One `stepStatuses` entry per `step` command.  `leftVehicles` lists the IDs of
-every vehicle that cleared the intersection during that step.
+One `stepStatuses` entry per `step` command.  `leftVehicles` lists the IDs of every vehicle that cleared the intersection during that step.
 
 ## Movement → lane mapping (right-hand traffic)
 
@@ -76,9 +70,7 @@ every vehicle that cleared the intersection during that step.
 | **east** | right | **left** | — | straight |
 | **west** | **left** | right | straight | — |
 
-Left turns are served by the protected arrow phases (e.g. `PHASE_NS_ARROW`
-gives green arrows to the left-turn lanes on both North and South
-simultaneously).  Straight and right-turn lanes share the main phases.
+Left turns are served by the protected arrow phases (e.g. `PHASE_NS_ARROW` gives green arrows to the left-turn lanes on both North and South simultaneously).  Straight and right-turn lanes share the main phases.
 
 ## Examples
 
