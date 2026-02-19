@@ -77,6 +77,19 @@ traffic_sim/
 │   ├── test_traffic_light.c
 │   ├── test_controller.c
 │   └── test_intersection.c
+├── web/
+│   ├── backend/
+│   │   └── app/
+│   │       ├── main.py       # FastAPI app (4 REST endpoints)
+│   │       ├── models.py     # Pydantic request/response models
+│   │       ├── simulator.py  # long-running subprocess wrapper + state mirror
+│   │       └── tests/        # pytest integration tests
+│   ├── frontend/
+│   │   ├── index.html        # layout: canvas + control sidebar
+│   │   ├── style.css         # dark theme, responsive
+│   │   └── app.js            # canvas renderer + API client
+│   ├── Dockerfile            # multi-stage: cmake build → Python runtime
+│   └── docker-compose.yml
 ├── QUICKSTART.md
 ├── Makefile
 └── CMakeLists.txt
@@ -156,6 +169,47 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
 Pin assignments are defined as lookup tables in `hal_stm32.c` and can be
 changed without touching any other file.
+
+---
+
+## Web visualiser
+
+A browser-based front end and REST API live under `web/`. The FastAPI backend wraps the `traffic_sim` binary as a long-running subprocess; the canvas frontend renders the intersection live.
+
+### Running locally
+
+```bash
+# Build the C binary first (if not already done)
+make
+
+# Install Python dependencies
+pip install -r web/backend/requirements.txt
+
+# Start the server (serves both API and frontend)
+cd web/backend
+TRAFFIC_SIM=../../build/traffic_sim uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Open `http://127.0.0.1:8000` in a browser.
+
+### Running with Docker
+
+```bash
+docker compose -f web/docker-compose.yml up
+```
+
+The Dockerfile builds the C binary in a first stage, so no local toolchain is needed.
+
+### REST API
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/state` | Full intersection state: lights, queue lengths, phase |
+| `POST` | `/api/vehicles` | Add a vehicle `{vehicle_id, start_road, end_road}` |
+| `POST` | `/api/step` | Advance one step; returns `{left_vehicles, step_number}` |
+| `POST` | `/api/reset` | Restart the simulation |
+
+Interactive API docs are available at `http://127.0.0.1:8000/docs`.
 
 ---
 
