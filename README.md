@@ -86,9 +86,7 @@ traffic_sim/
 
 ## Embedded deployment (STM32)
 
-The simulation core (`road`, `traffic_light`, `controller`, `intersection`) is
-fully platform-agnostic: no heap, no I/O, no OS dependencies. Deploying on an
-STM32 requires only two additional files and a timer.
+The simulation core (`road`, `traffic_light`, `controller`, `intersection`) is fully platform-agnostic. Deploying on an STM32 requires only two additional files and a timer.
 
 ### Deployment modes
 
@@ -106,23 +104,17 @@ typedef struct {
 } EmbeddedHAL;
 ```
 
-That is the entire porting surface. Swap in any implementation of these two
-functions to target a different MCU or sensor type.
+That is the entire porting surface. Swap in any implementation of these two functions to target a different MCU or sensor type.
 
 ### Embedded tick loop (`simulation.c`)
 
-`SimulationContext` holds the intersection state, per-lane edge-detection
-flags, and a vehicle ID counter. `simulation_tick()` is the function called
-by the timer ISR every N seconds:
+`SimulationContext` holds the intersection state, per-lane edge-detection flags, and a vehicle ID counter. `simulation_tick()` is the function called by the timer ISR every N seconds:
 
 1. Poll all 12 lane sensors; enqueue one new vehicle per rising edge.
 2. Call `intersection_step()` to advance the controller and lights.
 3. Call `hal->set_light()` for each road to update the physical outputs.
 
-Vehicles detected by sensor are added via `intersection_add_vehicle_by_lane()`
-rather than `intersection_add_vehicle()`. Since sensors know which lane is
-occupied but not the driver's destination, the destination is stored as
-`ROAD_NONE`; the controller and departure logic never read it.
+Vehicles detected by sensor are added via `intersection_add_vehicle_by_lane()` rather than `intersection_add_vehicle()`. Since sensors know which lane is occupied but not the driver's destination, the destination is stored as `ROAD_NONE`; the controller and departure logic never read it.
 
 ### STM32 usage (`hal_stm32.c`)
 
@@ -140,9 +132,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 }
 ```
 
-`stm32_traffic_step()` calls `simulation_tick()` with the STM32 HAL struct.
-The timer period determines the real-time duration of one simulation step
-(e.g. 2 s/step gives `MIN_GREEN_STEPS x 2 s = 4 s` minimum green).
+`stm32_traffic_step()` calls `simulation_tick()` with the STM32 HAL struct. The timer period determines the real-time duration of one simulation step (e.g. 2 s/step gives `MIN_GREEN_STEPS x 2 s = 4 s` minimum green).
 
 ### GPIO assignment
 
@@ -177,7 +167,7 @@ Each road has **three lanes**:
 |------|-------|-----------|
 | Left-turn only | `LANE_LEFT` (0) | Arrow phases |
 | Straight | `LANE_STRAIGHT` (1) | Main phases (NS / EW) |
-| Straight + right turn | `LANE_RIGHT` (2) | Main phases (NS / EW) |
+| Right turn | `LANE_RIGHT` (2) | Main phases (NS / EW) |
 
 Right turns share the main phase because they stay in the corner of the intersection and do not cross any opposing vehicle path.
 

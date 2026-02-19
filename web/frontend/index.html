@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traffic Simulation</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Traffic Intersection Simulator</h1>
+  </header>
+
+  <main>
+    <section class="canvas-section">
+      <canvas id="intersection" width="600" height="600"></canvas>
+      <div id="status-bar">
+        Step: <span id="step-count">0</span> &nbsp;|&nbsp;
+        Phase: <span id="phase-name">NS</span> &nbsp;|&nbsp;
+        <span id="yellow-badge" class="badge yellow hidden">YELLOW</span>
+      </div>
+    </section>
+
+    <aside class="controls">
+      <section class="card">
+        <h2>Add Vehicle</h2>
+        <label>ID
+          <input type="text" id="veh-id" placeholder="car1" maxlength="31">
+        </label>
+        <label>From
+          <select id="veh-from">
+            <option value="0">North</option>
+            <option value="1">South</option>
+            <option value="2">East</option>
+            <option value="3">West</option>
+          </select>
+        </label>
+        <label>To
+          <select id="veh-to">
+            <option value="1">South</option>
+            <option value="0">North</option>
+            <option value="2">East</option>
+            <option value="3">West</option>
+          </select>
+        </label>
+        <button id="btn-add">Add Vehicle</button>
+        <p id="add-feedback" class="feedback"></p>
+      </section>
+
+      <section class="card">
+        <h2>Simulation Control</h2>
+        <button id="btn-step">Step &rarr;</button>
+        <button id="btn-reset" class="danger">Reset</button>
+        <label class="inline">
+          <input type="checkbox" id="auto-step">
+          Auto-step every
+          <input type="number" id="auto-interval" value="1000" min="200" max="5000" step="100"> ms
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Last Step Departures</h2>
+        <ul id="departed-list">
+          <li class="muted">none yet</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Queue Counts</h2>
+        <table id="queue-table">
+          <thead>
+            <tr>
+              <th>Road</th><th>Left</th><th>Straight</th><th>Right</th>
+            </tr>
+          </thead>
+          <tbody id="queue-body"></tbody>
+        </table>
+      </section>
+    </aside>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

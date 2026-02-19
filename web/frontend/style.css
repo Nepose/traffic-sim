@@ -1,0 +1,178 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #0f1117;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+header {
+  padding: 1rem 1.5rem;
+  background: #1a1d27;
+  border-bottom: 1px solid #2a2d3a;
+}
+header h1 { font-size: 1.2rem; font-weight: 600; letter-spacing: .03em; }
+
+main {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  align-items: flex-start;
+}
+
+/* Canvas */
+.canvas-section { flex: 0 0 auto; min-width: 0; }
+#intersection {
+  display: block;
+  border-radius: 8px;
+  background: #1a1d27;
+  border: 1px solid #2a2d3a;
+  /* Scale down visually on small screens while keeping the 600×600 drawing
+     buffer intact — all JS coordinates continue to work unchanged. */
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+}
+#status-bar {
+  margin-top: .5rem;
+  font-size: .85rem;
+  color: #888;
+  text-align: center;
+}
+
+/* Controls */
+.controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 260px;
+  max-width: 320px;
+}
+
+@media (max-width: 700px) {
+  main {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 1rem;
+    gap: 1rem;
+  }
+
+  canvas {
+    width: 100%;
+  }
+
+  .controls {
+    min-width: 0;
+    max-width: 100%;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* Give the auto-interval number input a bit more room on touch screens */
+  input[type="number"] { width: 90px; }
+
+  button {
+    /* Easier to tap on small screens */
+    padding: .55rem 1.1rem;
+  }
+}
+
+.card {
+  background: #1a1d27;
+  border: 1px solid #2a2d3a;
+  border-radius: 8px;
+  padding: 1rem;
+}
+.card h2 {
+  font-size: .85rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #888;
+  margin-bottom: .75rem;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  font-size: .85rem;
+  color: #aaa;
+  margin-bottom: .5rem;
+}
+label.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  background: #0f1117;
+  border: 1px solid #2a2d3a;
+  border-radius: 4px;
+  color: #e0e0e0;
+  padding: .35rem .5rem;
+  font-size: .9rem;
+  width: 100%;
+}
+input[type="number"] { width: 80px; }
+input[type="checkbox"] { width: auto; accent-color: #4dabf7; }
+
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .45rem 1rem;
+  border: none;
+  border-radius: 5px;
+  background: #4dabf7;
+  color: #0f1117;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: .5rem;
+  margin-bottom: .25rem;
+  transition: background .15s;
+}
+button:hover { background: #74c0fc; }
+button.danger { background: #f03e3e; color: #fff; }
+button.danger:hover { background: #ff6b6b; }
+
+.feedback {
+  font-size: .8rem;
+  min-height: 1.2em;
+  color: #69db7c;
+  margin-top: .3rem;
+}
+.feedback.error { color: #f03e3e; }
+
+#departed-list {
+  list-style: none;
+  max-height: 120px;
+  overflow-y: auto;
+  font-size: .85rem;
+}
+#departed-list li { padding: .15rem 0; border-bottom: 1px solid #2a2d3a; }
+li.muted { color: #555; }
+
+/* Queue table */
+#queue-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+#queue-table th { color: #888; font-weight: 500; text-align: left; padding: .2rem .4rem; border-bottom: 1px solid #2a2d3a; }
+#queue-table td { padding: .2rem .4rem; }
+#queue-table td.nonzero { color: #ffd43b; font-weight: 600; }
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: .1rem .45rem;
+  border-radius: 3px;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+.badge.yellow { background: #fab005; color: #1a1d27; }
+.hidden { display: none !important; }

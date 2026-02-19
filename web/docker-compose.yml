@@ -1,0 +1,15 @@
+services:
+  api:
+    build:
+      context: ..          # repo root - needed for traffic_sim/ sources
+      dockerfile: web/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - TRAFFIC_SIM=/app/traffic_sim_bin
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/state')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
