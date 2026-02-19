@@ -1,6 +1,6 @@
 # Traffic Simulation
 
-An intelligent traffic light simulation for a four-way intersection, written in C with embedded portability as a first-class concern.
+An intelligent traffic light simulation for a four-way intersection, written in C with embedded portability as a main concern.
 
 The simulation accepts a JSON command file, processes `addVehicle` and `step` commands, and produces a JSON report of which vehicles left the intersection at each step.
 
@@ -54,18 +54,22 @@ traffic_sim/
 │   ├── types.h           # all shared enums and structs, no logic
 │   ├── road.h            # ring-buffer queue + movement derivation
 │   ├── traffic_light.h   # per-road FSM
-│   ├── intersection.h    # simulation loop (step, add vehicle, query)
-│   └── controller.h      # adaptive phase scheduling algorithm
+│   ├── intersection.h    # intersection lifecycle, step, add-vehicle
+│   ├── controller.h      # adaptive phase scheduling algorithm
+│   ├── hal.h             # EmbeddedHAL interface (sense_lane / set_light)
+│   └── simulation.h      # SimulationContext + simulation_tick (embedded loop)
 ├── src/
 │   ├── road.c
 │   ├── traffic_light.c
 │   ├── controller.c
 │   ├── intersection.c
-│   └── main.c            # stdin line-protocol entry point
+│   ├── simulation.c      # platform-neutral embedded tick loop
+│   ├── hal_stm32.c       # STM32 GPIO + timer implementation (embedded only)
+│   └── main.c            # stdin line-protocol entry point (desktop)
 ├── bridge/
-│   └── bridge.py         # JSON ↔ line-protocol adapter
+│   └── bridge.py         # JSON to line-protocol adapter
 ├── examples/
-│   ├── 01_spec_example.json … 09_left_turn_siege.json
+│   ├── 01_spec_example.json ... 09_left_turn_siege.json
 │   └── gen_examples.py   # generator for large scenarios
 ├── tests/
 │   ├── test_helpers.h    # minimal zero-dependency test harness
@@ -77,6 +81,91 @@ traffic_sim/
 ├── Makefile
 └── CMakeLists.txt
 ```
+
+---
+
+## Embedded deployment (STM32)
+
+The simulation core (`road`, `traffic_light`, `controller`, `intersection`) is
+fully platform-agnostic: no heap, no I/O, no OS dependencies. Deploying on an
+STM32 requires only two additional files and a timer.
+
+### Deployment modes
+
+| Mode | Entry point | Input | Output |
+|------|-------------|-------|--------|
+| Desktop | `main.c` | stdin line protocol | stdout |
+| Embedded | `hal_stm32.c` + timer ISR | GPIO sensors | GPIO lights |
+
+### HAL interface (`include/hal.h`)
+
+```c
+typedef struct {
+    bool (*sense_lane)(RoadDir road, Lane lane); /* read one sensor       */
+    void (*set_light) (RoadDir road, LightState state); /* drive one light */
+} EmbeddedHAL;
+```
+
+That is the entire porting surface. Swap in any implementation of these two
+functions to target a different MCU or sensor type.
+
+### Embedded tick loop (`simulation.c`)
+
+`SimulationContext` holds the intersection state, per-lane edge-detection
+flags, and a vehicle ID counter. `simulation_tick()` is the function called
+by the timer ISR every N seconds:
+
+1. Poll all 12 lane sensors; enqueue one new vehicle per rising edge.
+2. Call `intersection_step()` to advance the controller and lights.
+3. Call `hal->set_light()` for each road to update the physical outputs.
+
+Vehicles detected by sensor are added via `intersection_add_vehicle_by_lane()`
+rather than `intersection_add_vehicle()`. Since sensors know which lane is
+occupied but not the driver's destination, the destination is stored as
+`ROAD_NONE`; the controller and departure logic never read it.
+
+### STM32 usage (`hal_stm32.c`)
+
+Call once after CubeMX peripheral init:
+
+```c
+stm32_traffic_init();   /* initialises intersection + starts TIM2 */
+```
+
+Wire the timer callback:
+
+```c
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM2) stm32_traffic_step();
+}
+```
+
+`stm32_traffic_step()` calls `simulation_tick()` with the STM32 HAL struct.
+The timer period determines the real-time duration of one simulation step
+(e.g. 2 s/step gives `MIN_GREEN_STEPS x 2 s = 4 s` minimum green).
+
+### GPIO assignment
+
+**Light outputs** - 16 pins, push-pull, active high (one pin per state per road):
+
+| Road | RED | YELLOW | GREEN | GREEN_ARROW |
+|------|-----|--------|-------|-------------|
+| North | PA0 | PA1 | PA2 | PA3 |
+| South | PA4 | PA5 | PA6 | PA7 |
+| East | PB0 | PB1 | PB2 | PB3 |
+| West | PB4 | PB5 | PB6 | PB7 |
+
+**Sensor inputs** - 12 pins, pull-down, active high (one pin per lane per road):
+
+| Road | LANE_LEFT | LANE_STRAIGHT | LANE_RIGHT |
+|------|-----------|---------------|------------|
+| North | PC0 | PC1 | PC2 |
+| South | PC3 | PC4 | PC5 |
+| East | PC6 | PC7 | PC8 |
+| West | PC9 | PC10 | PC11 |
+
+Pin assignments are defined as lookup tables in `hal_stm32.c` and can be
+changed without touching any other file.
 
 ---
 
@@ -128,9 +217,9 @@ set_green(N)         set_green_arrow(N)               │
            └─────────────┘
 ```
 
-`tick()` is called **after** the vehicle check each step, so a light set to `GREEN` with duration `N` allows exactly `N` vehicles through before transitioning. `tick()` on a `RED` light is a no-op, safe to call unconditionally on all four roads every step.
+`tick()` is called after the vehicle check each step, so a light set to `GREEN` with duration `N` allows exactly `N` vehicles through before transitioning. `tick()` on a `RED` light is a no-op, safe to call unconditionally on all four roads every step.
 
-YELLOW is a **display state only**. It appears on the light at the end of the last green step (after `tick()`) but does not consume a simulation step of its own — the new phase is applied at the very start of the following step, overriding YELLOW before any vehicle check occurs.
+YELLOW is a display state only. It appears on the light at the end of the last green step (after `tick()`) but does not consume a simulation step of its own — the new phase is applied at the very start of the following step, overriding YELLOW before any vehicle check occurs.
 
 ---
 

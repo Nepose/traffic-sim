@@ -5,15 +5,14 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 add_compile_options(-Wall -Wextra -Wpedantic)
 
-# Core library
-#
-# Will add new .c files here as modules are implemented (intersection.c,
-# simulation.c, hal_desktop.c, main.c).
+# Core library (desktop build).
+# src/hal_stm32.c is intentionally excluded — add it only to STM32 projects.
 set(CORE_SOURCES
     src/road.c
     src/traffic_light.c
     src/controller.c
     src/intersection.c
+    src/simulation.c
 )
 
 add_library(traffic_sim_core STATIC ${CORE_SOURCES})

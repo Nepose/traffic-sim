@@ -63,6 +63,34 @@ bool intersection_add_vehicle(Intersection *inter,
     return road_enqueue(&inter->roads[start], &v);
 }
 
+bool intersection_add_vehicle_by_lane(Intersection *inter,
+                                      RoadDir       road,
+                                      Lane          lane,
+                                      const char   *id) {
+    if (road >= ROAD_COUNT || lane >= LANES_PER_ROAD) {
+        return false;
+    }
+
+    /* Map lane index back to a canonical movement type.
+     * The destination road is unknown from a sensor reading, so end_road
+     * is set to ROAD_NONE. The controller and departure logic never read
+     * end_road, so this is safe. */
+    static const MovementType lane_to_movement[LANES_PER_ROAD] = {
+        [LANE_LEFT]     = MOVE_LEFT,
+        [LANE_STRAIGHT] = MOVE_STRAIGHT,
+        [LANE_RIGHT]    = MOVE_RIGHT,
+    };
+
+    Vehicle v;
+    memset(&v, 0, sizeof(v));
+    strncpy(v.id, id, MAX_VEHICLE_ID_LEN - 1);
+    v.end_road     = ROAD_NONE;
+    v.movement     = lane_to_movement[lane];
+    v.enqueue_step = inter->step_count;
+
+    return queue_enqueue(&inter->roads[road].lanes[lane], &v);
+}
+
 void intersection_step(Intersection *inter,
                        Vehicle       departed[MAX_DEPARTURES_PER_STEP],
                        uint8_t      *count) {

@@ -51,6 +51,23 @@ void intersection_step(Intersection *inter,
                        Vehicle       departed[MAX_DEPARTURES_PER_STEP],
                        uint8_t      *count);
 
+/*
+ * Add a vehicle directly into a specific lane, without knowing its destination.
+ *
+ * Used by the embedded HAL: vehicle-detection sensors know which lane is
+ * occupied but not where the driver intends to go. The vehicle is assigned
+ * the canonical movement type for the lane (LEFT/STRAIGHT/RIGHT) and
+ * ROAD_NONE as its destination, which is sufficient for the controller and
+ * the departure logic.
+ *
+ * Returns false if the road or lane index is out of range, or if the lane
+ * is full.
+ */
+bool intersection_add_vehicle_by_lane(Intersection *inter,
+                                      RoadDir       road,
+                                      Lane          lane,
+                                      const char   *id);
+
 /* Current light state for a road, useful for display and debugging. */
 LightState intersection_light_state(const Intersection *inter, RoadDir road);
 
