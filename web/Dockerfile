@@ -11,9 +11,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
-COPY traffic_sim/ traffic_sim/
-RUN cmake -S traffic_sim -B traffic_sim/build -DCMAKE_BUILD_TYPE=Release \
- && cmake --build traffic_sim/build --parallel
+COPY src/ src/
+COPY include/ include/
+COPY CMakeLists.txt .
+RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+ && cmake --build build --parallel
 
 # ---------------------------------------------------------------------------
 # Stage 2 - Python API + frontend
@@ -23,7 +25,7 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # Copy binary from builder
-COPY --from=builder /src/traffic_sim/build/traffic_sim /app/traffic_sim_bin
+COPY --from=builder /src/build/traffic_sim /app/traffic_sim_bin
 
 # Install Python dependencies
 COPY web/backend/requirements.txt requirements.txt
