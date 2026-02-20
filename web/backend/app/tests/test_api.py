@@ -89,7 +89,7 @@ def test_add_vehicle_increments_queue(client):
 
 
 def test_add_vehicle_left_turn(client):
-    client.post("/api/vehicles", json={"vehicle_id": "lt1", "start_road": 2, "end_road": 0})
+    client.post("/api/vehicles", json={"vehicle_id": "lt1", "start_road": 2, "end_road": 1})
     state = client.get("/api/state").json()
     east = next(r for r in state["roads"] if r["direction"] == 2)
     assert east["lanes"]["left"]["queue_length"] == 1

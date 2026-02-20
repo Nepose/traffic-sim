@@ -251,8 +251,7 @@ class SimulatorProcess:
     def add_vehicle(self, req: AddVehicleRequest) -> None:
         with self._lock:
             self._start()
-
-            line = f"addVehicle {str(time.time()).replace('.', '')} {req.start_road.name} {req.end_road.name}\n"
+            line = f"addVehicle {req.vehicle_id} {req.start_road.name.lower()} {req.end_road.name.lower()}\n"
             self._send(line)
             self._state.add_vehicle(req)
 
