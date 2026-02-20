@@ -36,19 +36,48 @@ let state = null;          // last IntersectionState from API
 let autoTimer = null;
 
 // ---------------------------------------------------------------------------
-// Canvas setup
+// Canvas setup + dynamic metrics
 // ---------------------------------------------------------------------------
 
 const canvas = document.getElementById("intersection");
 const ctx = canvas.getContext("2d");
-const W = canvas.width;
-const H = canvas.height;
-const CX = W / 2;
-const CY = H / 2;
 
-const BOX   = 80;   // half-width of the junction box
-const LANE  = 22;   // lane width in pixels
-const LPAD  = 10;   // padding before first lane
+// Logical drawing dimensions (CSS pixels). Updated before every render.
+let W = 600, H = 600, CX = 300, CY = 300;
+let BOX = 80, LANE = 22, LPAD = 10, scale = 1;
+
+// Scale a base-600 pixel value to the current canvas size.
+const px = v => v * scale;
+
+// Scale a font size with a minimum floor so text stays readable.
+const fs = (size, min = 7) => Math.max(min, Math.round(size * scale));
+
+function syncMetrics() {
+  const dpr  = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth || 600;
+
+  W     = cssW;
+  H     = cssW;   // always square
+  CX    = W / 2;
+  CY    = H / 2;
+  scale = W / 600;
+  BOX   = 80 * scale;
+  LANE  = 22 * scale;
+  LPAD  = 10 * scale;
+
+  // Sync the physical drawing buffer to the CSS display size.
+  const phW = Math.round(cssW * dpr);
+  if (canvas.width !== phW || canvas.height !== phW) {
+    canvas.width  = phW;
+    canvas.height = phW;
+  }
+}
+
+// Re-render whenever the canvas CSS size changes (viewport resize, etc.)
+new ResizeObserver(entries => {
+  const newW = Math.round(entries[0].contentRect.width);
+  if (newW !== W) render(state);
+}).observe(canvas);
 
 // ---------------------------------------------------------------------------
 // Draw helpers
@@ -71,8 +100,8 @@ function drawRoads() {
   ctx.fillRect(CX - BOX, CY - BOX, BOX * 2, BOX * 2);
 
   // Centre divider lines (dashed)
-  ctx.setLineDash([12, 8]);
-  ctx.lineWidth = 1.5;
+  ctx.setLineDash([px(12), px(8)]);
+  ctx.lineWidth = Math.max(1, px(1.5));
   ctx.strokeStyle = COLORS.divider;
 
   ctx.beginPath();
@@ -90,9 +119,9 @@ function drawRoads() {
 
 // Draw a single traffic light circle at (x, y)
 function drawLight(x, y, lightState) {
-  const R = 10;
+  const R = Math.max(4, px(10));
   ctx.beginPath();
-  ctx.arc(x, y, R + 2, 0, Math.PI * 2);
+  ctx.arc(x, y, R + px(2), 0, Math.PI * 2);
   ctx.fillStyle = COLORS.lightRing;
   ctx.fill();
 
@@ -105,31 +134,31 @@ function drawLight(x, y, lightState) {
   // Arrow indicator for GREEN_ARROW
   if (lightState === 3) {
     ctx.fillStyle = COLORS.arrow;
-    ctx.font = "bold 14px sans-serif";
+    ctx.font = `bold ${fs(14, 8)}px sans-serif`;
     ctx.textAlign = "center";
-    ctx.color = COLORS.text_arrow;
     ctx.textBaseline = "middle";
     ctx.fillText("←", x, y);
   }
 }
 
-function lightStateName(s) {
-  return ["RED", "YELLOW", "GREEN", "GREEN_ARROW"][s] ?? "lightOff";
+function lightStateName(st) {
+  return ["RED", "YELLOW", "GREEN", "GREEN_ARROW"][st] ?? "lightOff";
 }
 
 // Draw queue count badge at (x, y)
 function drawQueue(x, y, count) {
   if (count === 0) return;
   const label = count > 99 ? "99+" : String(count);
-  ctx.font = "bold 11px monospace";
+  const fontSize = fs(11, 7);
+  ctx.font = `bold ${fontSize}px monospace`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const tw = ctx.measureText(label).width;
-  const bw = Math.max(tw + 8, 20);
-  const bh = 16;
+  const tw  = ctx.measureText(label).width;
+  const bw  = Math.max(tw + px(8), px(20));
+  const bh  = Math.max(px(16), fontSize + px(4));
   ctx.fillStyle = "#1a1d27cc";
   ctx.beginPath();
-  ctx.roundRect(x - bw / 2, y - bh / 2, bw, bh, 4);
+  ctx.roundRect(x - bw / 2, y - bh / 2, bw, bh, px(4));
   ctx.fill();
   ctx.fillStyle = COLORS.queueDot;
   ctx.fillText(label, x, y);
@@ -152,105 +181,107 @@ function drawNorthRoad(road) {
   const light = road.light;
   // Light box position: above the junction, within the northbound lanes
   const lx = CX - BOX / 2;
-  const ly = CY - BOX - 28;
+  const ly = CY - BOX - px(42);
   drawLight(lx, ly, light.state);
 
   // Lane queue badges (top of road, going up)
   const lanes = road.lanes;
-  const qy = CY - BOX - 30;
-  drawQueue(CX - LANE - 40,     qy, lanes.right?.queue_length     ?? 0);
-  drawQueue(CX - 40,            qy, lanes.straight?.queue_length ?? 0);
-  drawQueue(CX + LANE - 40,     qy, lanes.left?.queue_length    ?? 0);
+  const qy = CY - BOX - px(30);
+  drawQueue(CX - LANE - px(40),     qy, lanes.right?.queue_length     ?? 0);
+  drawQueue(CX - px(40),            qy, lanes.straight?.queue_length ?? 0);
+  drawQueue(CX + LANE - px(40),     qy, lanes.left?.queue_length    ?? 0);
 
   // Lane labels
-  ctx.font = "9px sans-serif";
+  ctx.font = `${fs(9, 6)}px sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "top";
   ctx.fillStyle = COLORS.label;
-  ctx.fillText("R", CX - LANE - 40, CY - BOX - 18);
-  ctx.fillText("S", CX - 40,        CY - BOX - 18);
-  ctx.fillText("L", CX + LANE - 40, CY - BOX - 18);
+  ctx.fillText("R", CX - LANE - px(40), CY - BOX - px(18));
+  ctx.fillText("S", CX - px(40),        CY - BOX - px(18));
+  ctx.fillText("L", CX + LANE - px(40), CY - BOX - px(18));
 }
 
 function drawSouthRoad(road) {
   const light = road.light;
   // Light box position: below the junction, within the southbound lanes
   const lx = CX + BOX / 2;
-  const ly = CY + BOX + 28;
+  const ly = CY + BOX + px(35);
   drawLight(lx, ly, light.state);
 
   const lanes = road.lanes;
-  const qy = CY + BOX + 22;
+  const qy = CY + BOX + px(22);
   // Mirror: left is to East side of road
-  drawQueue(CX + LANE + 40, qy, lanes.right?.queue_length     ?? 0);
-  drawQueue(CX + 40,        qy, lanes.straight?.queue_length ?? 0);
-  drawQueue(CX - LANE + 40, qy, lanes.left?.queue_length    ?? 0);
+  drawQueue(CX + LANE + px(40), qy, lanes.right?.queue_length     ?? 0);
+  drawQueue(CX + px(40),        qy, lanes.straight?.queue_length ?? 0);
+  drawQueue(CX - LANE + px(40), qy, lanes.left?.queue_length    ?? 0);
 
-  ctx.font = "9px sans-serif";
+  ctx.font = `${fs(9, 6)}px sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "bottom";
   ctx.fillStyle = COLORS.label;
-  ctx.fillText("R", CX + LANE + 40, CY + BOX + 10);
-  ctx.fillText("S", CX + 40,        CY + BOX + 10);
-  ctx.fillText("L", CX - LANE + 40, CY + BOX + 10);
+  ctx.fillText("R", CX + LANE + px(40), CY + BOX + px(10));
+  ctx.fillText("S", CX + px(40),        CY + BOX + px(10));
+  ctx.fillText("L", CX - LANE + px(40), CY + BOX + px(10));
 }
 
 function drawEastRoad(road) {
   const light = road.light;
   // Light box position: right of the junction, within the eastbound lanes
-  const lx = CX + BOX + 28;
+  const lx = CX + BOX + px(48);
   const ly = CY - BOX / 2;
   drawLight(lx, ly, light.state);
 
   const lanes = road.lanes;
-  const qx = CX + BOX + 30;
-  drawQueue(qx, CY - LANE - 40, lanes.right?.queue_length     ?? 0);
-  drawQueue(qx, CY - 40,        lanes.straight?.queue_length ?? 0);
-  drawQueue(qx, CY + LANE - 40, lanes.left?.queue_length    ?? 0);
+  const qx = CX + BOX + px(30);
+  drawQueue(qx, CY - LANE - px(40), lanes.right?.queue_length     ?? 0);
+  drawQueue(qx, CY - px(40),        lanes.straight?.queue_length ?? 0);
+  drawQueue(qx, CY + LANE - px(40), lanes.left?.queue_length    ?? 0);
 
-  ctx.font = "9px sans-serif";
+  ctx.font = `${fs(9, 6)}px sans-serif`;
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.fillStyle = COLORS.label;
-  ctx.fillText("R", CX + BOX + 18, CY - LANE - 40);
-  ctx.fillText("S", CX + BOX + 18, CY - 40);
-  ctx.fillText("L", CX + BOX + 18, CY + LANE - 40);
+  ctx.fillText("R", CX + BOX + px(18), CY - LANE - px(40));
+  ctx.fillText("S", CX + BOX + px(18), CY - px(40));
+  ctx.fillText("L", CX + BOX + px(18), CY + LANE - px(40));
 }
 
 function drawWestRoad(road) {
   const light = road.light;
   // Light box position: left of the junction, within the westbound lanes
-  const lx = CX - BOX - 28;
+  const lx = CX - BOX - px(48);
   const ly = CY + BOX / 2;
   drawLight(lx, ly, light.state);
 
   const lanes = road.lanes;
-  const qx = CX - BOX - 30;
-  drawQueue(qx, CY + LANE + 40, lanes.right?.queue_length     ?? 0);
-  drawQueue(qx, CY + 40,        lanes.straight?.queue_length ?? 0);
-  drawQueue(qx, CY - LANE + 40, lanes.left?.queue_length    ?? 0);
+  const qx = CX - BOX - px(30);
+  drawQueue(qx, CY + LANE + px(40), lanes.right?.queue_length     ?? 0);
+  drawQueue(qx, CY + px(40),        lanes.straight?.queue_length ?? 0);
+  drawQueue(qx, CY - LANE + px(40), lanes.left?.queue_length    ?? 0);
 
-  ctx.font = "9px sans-serif";
+  ctx.font = `${fs(9, 6)}px sans-serif`;
   ctx.textAlign = "right";
   ctx.textBaseline = "middle";
   ctx.fillStyle = COLORS.label;
-  ctx.fillText("R", CX - BOX - 18, CY + LANE + 40);
-  ctx.fillText("S", CX - BOX - 18, CY + 40);
-  ctx.fillText("L", CX - BOX - 18, CY - LANE + 40);
+  ctx.fillText("R", CX - BOX - px(18), CY + LANE + px(40));
+  ctx.fillText("S", CX - BOX - px(18), CY + px(40));
+  ctx.fillText("L", CX - BOX - px(18), CY - LANE + px(40));
 }
 
 // Road direction labels
 function drawDirectionLabels() {
-  ctx.font = "bold 13px sans-serif";
+  if (W < 200) return;  // too small to be useful
+  ctx.font = `bold ${fs(13, 9)}px sans-serif`;
   ctx.fillStyle = "#aaa";
+  const m = Math.max(10, px(16));   // margin from edge
   const pairs = [
-    ["al. Jana Pawła II", CX, 16, "center", "top"],
-    ["al. Jana Pawła II", CX, H - 16, "center", "bottom"],
-    ["Okopowa", W - 16, CY, "right", "middle"],
-    ["Okopowa", 16, CY, "left", "middle"],
+    ["al. Jana Pawla II", CX, m,     "center", "top"],
+    ["al. Jana Pawla II", CX, H - m, "center", "bottom"],
+    ["Okopowa", W - m, CY, "right", "middle"],
+    ["Okopowa", m,     CY, "left",  "middle"],
   ];
   for (const [label, x, y, ta, tb] of pairs) {
-    ctx.textAlign = ta;
+    ctx.textAlign    = ta;
     ctx.textBaseline = tb;
     ctx.fillText(label, x, y);
   }
@@ -258,13 +289,16 @@ function drawDirectionLabels() {
 
 const DRAW_FNS = [drawNorthRoad, drawSouthRoad, drawEastRoad, drawWestRoad];
 
-function render(s) {
+function render(st) {
+  syncMetrics();
+  const dpr = window.devicePixelRatio || 1;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   clearCanvas();
   drawRoads();
   drawDirectionLabels();
-  if (!s) return;
+  if (!st) return;
   for (let i = 0; i < 4; i++) {
-    DRAW_FNS[i](s.roads[i]);
+    DRAW_FNS[i](st.roads[i]);
   }
 }
 
