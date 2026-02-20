@@ -7,12 +7,13 @@
 FROM ubuntu:24.04 AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cmake gcc make ca-certificates \
+    cmake gcc libc6-dev make ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
 COPY src/ src/
 COPY include/ include/
+COPY tests/ tests/
 COPY CMakeLists.txt .
 RUN cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
  && cmake --build build --parallel
@@ -38,6 +39,7 @@ COPY web/backend/app/ app/
 COPY web/frontend/ frontend/
 
 ENV TRAFFIC_SIM=/app/traffic_sim_bin
+ENV FRONTEND_DIR=/app/frontend
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 8000

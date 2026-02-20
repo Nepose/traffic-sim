@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
+import os
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -40,11 +43,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-_frontend = Path(__file__).resolve().parent.parent.parent / "frontend"
-if _frontend.exists():
-    app.mount("/static", StaticFiles(directory=str(_frontend), html=True), name="frontend")
-
 
 # ---------------------------------------------------------------------------
 # API routes
@@ -86,3 +84,15 @@ async def reset():
     """Reset the simulation to the initial state."""
     simulator.reset()
     return ResetResponse(ok=True)
+
+# ----
+# Frontend mounting
+# ----
+
+_frontend = Path(os.getenv("FRONTEND_DIR", str(Path(__file__).resolve().parent.parent.parent / "frontend")))
+if _frontend.exists():
+    app.mount("/static", StaticFiles(directory=str(_frontend), html=False), name="frontend")
+
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(_frontend / "index.html")
