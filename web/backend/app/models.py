@@ -7,7 +7,6 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator
 
-
 # ---------------------------------------------------------------------------
 # Domain enums (mirror types.h)
 # ---------------------------------------------------------------------------

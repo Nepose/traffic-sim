@@ -9,12 +9,13 @@ Run with:
 
 from __future__ import annotations
 
-import os
+from os import environ
+
 import pytest
 from fastapi.testclient import TestClient
 
 # Skip all tests if binary is missing and TRAFFIC_SIM is not set
-BINARY_PATH = os.environ.get(
+BINARY_PATH = environ.get(
     "TRAFFIC_SIM",
     str(__file__).replace(
         "web/backend/app/tests/test_api.py",
@@ -24,8 +25,7 @@ BINARY_PATH = os.environ.get(
 
 
 def binary_available() -> bool:
-    import shutil
-    env = os.environ.get("TRAFFIC_SIM")
+    env = environ.get("TRAFFIC_SIM")
     if env:
         import os.path
         return os.path.isfile(env)
@@ -89,7 +89,7 @@ def test_add_vehicle_increments_queue(client):
 
 
 def test_add_vehicle_left_turn(client):
-    client.post("/api/vehicles", json={"vehicle_id": "lt1", "start_road": 2, "end_road": 0})
+    client.post("/api/vehicles", json={"vehicle_id": "lt1", "start_road": 2, "end_road": 1})
     state = client.get("/api/state").json()
     east = next(r for r in state["roads"] if r["direction"] == 2)
     assert east["lanes"]["left"]["queue_length"] == 1

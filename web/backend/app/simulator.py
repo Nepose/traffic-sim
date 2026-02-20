@@ -9,20 +9,18 @@ Thread safety: a single asyncio.Lock serialises all subprocess I/O.
 
 from __future__ import annotations
 
-import asyncio
 import os
 import subprocess
 import threading
-import time
 from pathlib import Path
 
 from .models import (
     AddVehicleRequest,
     IntersectionState,
     Lane,
+    LaneInfo,
     LightInfo,
     LightState,
-    LaneInfo,
     Phase,
     RoadDir,
     RoadInfo,
@@ -252,8 +250,7 @@ class SimulatorProcess:
     def add_vehicle(self, req: AddVehicleRequest) -> None:
         with self._lock:
             self._start()
-
-            line = f"addVehicle {str(time.time()).replace('.', '')} {req.start_road.name} {req.end_road.name}\n"
+            line = f"addVehicle {req.vehicle_id} {req.start_road.name.lower()} {req.end_road.name.lower()}\n"
             self._send(line)
             self._state.add_vehicle(req)
 

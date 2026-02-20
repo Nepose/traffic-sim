@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
-
 import os
+from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 
 from .models import (
     AddVehicleRequest,
@@ -19,7 +18,6 @@ from .models import (
     StepResponse,
 )
 from .simulator import simulator
-
 
 # ---------------------------------------------------------------------------
 # App lifecycle
