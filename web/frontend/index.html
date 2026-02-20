@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Traffic Simulation</title>
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
   <header>
@@ -67,18 +67,20 @@
 
       <section class="card">
         <h2>Queue Counts</h2>
-        <table id="queue-table">
-          <thead>
-            <tr>
-              <th>Road</th><th>Left</th><th>Straight</th><th>Right</th>
-            </tr>
-          </thead>
-          <tbody id="queue-body"></tbody>
-        </table>
+        <div class="table-scroll">
+          <table id="queue-table">
+            <thead>
+              <tr>
+                <th>Road</th><th>Left</th><th>Straight</th><th>Right</th>
+              </tr>
+            </thead>
+            <tbody id="queue-body"></tbody>
+          </table>
+        </div>
       </section>
     </aside>
   </main>
 
-  <script src="/app.js"></script>
+  <script src="/static/app.js"></script>
 </body>
 </html>
