@@ -9,7 +9,6 @@ Thread safety: a single asyncio.Lock serialises all subprocess I/O.
 
 from __future__ import annotations
 
-import asyncio
 import os
 import subprocess
 import threading
@@ -20,9 +19,9 @@ from .models import (
     AddVehicleRequest,
     IntersectionState,
     Lane,
+    LaneInfo,
     LightInfo,
     LightState,
-    LaneInfo,
     Phase,
     RoadDir,
     RoadInfo,
