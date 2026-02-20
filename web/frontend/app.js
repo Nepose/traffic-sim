@@ -181,7 +181,7 @@ function drawNorthRoad(road) {
   const light = road.light;
   // Light box position: above the junction, within the northbound lanes
   const lx = CX - BOX / 2;
-  const ly = CY - BOX - px(28);
+  const ly = CY - BOX - px(42);
   drawLight(lx, ly, light.state);
 
   // Lane queue badges (top of road, going up)
@@ -205,7 +205,7 @@ function drawSouthRoad(road) {
   const light = road.light;
   // Light box position: below the junction, within the southbound lanes
   const lx = CX + BOX / 2;
-  const ly = CY + BOX + px(28);
+  const ly = CY + BOX + px(35);
   drawLight(lx, ly, light.state);
 
   const lanes = road.lanes;
@@ -227,7 +227,7 @@ function drawSouthRoad(road) {
 function drawEastRoad(road) {
   const light = road.light;
   // Light box position: right of the junction, within the eastbound lanes
-  const lx = CX + BOX + px(28);
+  const lx = CX + BOX + px(48);
   const ly = CY - BOX / 2;
   drawLight(lx, ly, light.state);
 
@@ -249,7 +249,7 @@ function drawEastRoad(road) {
 function drawWestRoad(road) {
   const light = road.light;
   // Light box position: left of the junction, within the westbound lanes
-  const lx = CX - BOX - px(28);
+  const lx = CX - BOX - px(48);
   const ly = CY + BOX / 2;
   drawLight(lx, ly, light.state);
 
